@@ -1,3 +1,9 @@
+# $s0: So kWh (x) con lai chua tinh tien
+# $s1: Tong tien dien tich luy
+# $s2: Con tro dia chi hien tai cua mang_nguong
+# $s3: Con tro dia chi hien tai cua mang_gia
+# $t0, $t1, $t2, $t3: Cac thanh ghi tam dung de so sanh, tinh toan trung gian
+
 .data
 msg_nhap: .asciiz "Nhap so kWh (0..9999): "
 msg_loi: .asciiz "Gia tri khong hop le, nhap lai.\n"
