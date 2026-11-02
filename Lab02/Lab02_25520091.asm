@@ -238,98 +238,92 @@ chk_exit:
 
 # LAB 02 - PHAN MO RONG
 .data
-    str_expr:   .asciiz "{[a + b * (c - d)]}"
+    hist_data:  .word 2, 3, 3, 4
+    
+    str_g0:     .asciiz "g0: "
+    str_g1:     .asciiz "g1: "
+    str_g2:     .asciiz "g2: "
+    str_g3:     .asciiz "g3: "
+    str_bar:    .asciiz "|"
+    str_nl:     .asciiz "\n"
 
 .text
 .globl main
 
 main:
-    la   $a0, str_expr
-    jal  check_brackets_ext
+    la   $a0, hist_data
+    li   $a1, 4
+    jal  draw_hist
     
     li   $v0, 10
     syscall
 
-check_brackets_ext:
-    move $t9, $sp               
-    move $t0, $a0               
-    li   $t1, 0                 
+draw_hist:
+    addiu $sp, $sp, -20
+    sw    $ra, 16($sp)
+    sw    $s0, 12($sp)
+    sw    $s1, 8($sp)
+    sw    $s2, 4($sp)
+    sw    $s3, 0($sp)
 
-chk_ext_loop:
-    lbu  $t2, 0($t0)
-    beq  $t2, $zero, chk_ext_eos   
-    addiu $t1, $t1, 1           
+    move  $s0, $a0
+    move  $s1, $a1
+    li    $s2, 0
 
-    li   $t3, 40                
-    beq  $t2, $t3, ext_push
-    li   $t3, 91                
-    beq  $t2, $t3, ext_push
-    li   $t3, 123               
-    beq  $t2, $t3, ext_push
+draw_loop:
+    bge   $s2, $s1, draw_done
 
-    li   $t3, 41                
-    beq  $t2, $t3, ext_close
-    li   $t3, 93                
-    beq  $t2, $t3, ext_close
-    li   $t3, 125               
-    beq  $t2, $t3, ext_close
+    beq   $s2, 0, print_g0
+    beq   $s2, 1, print_g1
+    beq   $s2, 2, print_g2
+    beq   $s2, 3, print_g3
+    j     do_print_label
 
-    j    chk_ext_next
+print_g0:
+    la   $a0, str_g0
+    j    do_print_label
+print_g1:
+    la   $a0, str_g1
+    j    do_print_label
+print_g2:
+    la   $a0, str_g2
+    j    do_print_label
+print_g3:
+    la   $a0, str_g3
 
-ext_push:
-    addiu $sp, $sp, -4
-    sw   $t2, 0($sp)
-    j    chk_ext_next
+do_print_label:
+    li   $v0, 4
+    syscall
 
-ext_close:
-    beq  $sp, $t9, ext_err_stack_empty
+    sll   $t0, $s2, 2
+    add   $t0, $s0, $t0
+    lw    $s3, 0($t0)
+
+    li    $t1, 0
+
+print_bar_loop:
+    bge   $t1, $s3, print_newline_bar
     
-    lw   $t4, 0($sp)            
-    addiu $sp, $sp, 4
+    la   $a0, str_bar
+    li   $v0, 4
+    syscall
 
-    li   $t3, 41                
-    bne  $t2, $t3, ext_chk_bracket
-    li   $t3, 40
-    bne  $t4, $t3, ext_err_mismatch
-    j    chk_ext_next
+    addiu $t1, $t1, 1
+    j     print_bar_loop
 
-ext_chk_bracket:
-    li   $t3, 93                
-    bne  $t2, $t3, ext_chk_brace
-    li   $t3, 91
-    bne  $t4, $t3, ext_err_mismatch
-    j    chk_ext_next
+print_newline_bar:
+    la   $a0, str_nl
+    li   $v0, 4
+    syscall
 
-ext_chk_brace:
-    li   $t3, 125               
-    bne  $t4, $t3, ext_err_mismatch
+    addiu $s2, $s2, 1
+    j     draw_loop
 
-chk_ext_next:
-    addiu $t0, $t0, 1
-    j    chk_ext_loop
-
-chk_ext_eos:
-    bne  $sp, $t9, ext_err_not_empty
-    
-    li   $v0, 0
-    li   $v1, 0
-    j    ext_exit
-
-ext_err_mismatch:
-    move $v0, $t1               
-    li   $v1, 1                 
-    j    ext_exit
-
-ext_err_stack_empty:
-    move $v0, $t1               
-    li   $v1, 2                 
-    j    ext_exit
-
-ext_err_not_empty:
-    addiu $v0, $t1, 1           
-    li   $v1, 3                 
-    j    ext_exit
-
-ext_exit:
-    move $sp, $t9               
-    jr   $ra
+draw_done:
+    lw    $s3, 0($sp)
+    lw    $s2, 4($sp)
+    lw    $s1, 8($sp)
+    lw    $s0, 12($sp)
+    lw    $ra, 16($sp)
+    addiu $sp, $sp, 20
+    jr    $ra
